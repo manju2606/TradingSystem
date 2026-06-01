@@ -1,0 +1,5 @@
+region           = "ap-south-1"
+project          = "trading"
+vpc_cidr         = "10.1.0.0/16"
+db_password      = "REPLACE_WITH_STRONG_PASSWORD"
+redis_auth_token = "REPLACE_WITH_STRONG_TOKEN"

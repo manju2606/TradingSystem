@@ -1,0 +1,56 @@
+# Pre-EKS IAM roles: cluster role and node role only.
+# IRSA roles (which need the OIDC provider) live in the iam module.
+
+data "aws_iam_policy_document" "eks_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals { type = "Service"; identifiers = ["eks.amazonaws.com"] }
+  }
+}
+
+resource "aws_iam_role" "cluster" {
+  name               = "${var.prefix}-eks-cluster-role"
+  assume_role_policy = data.aws_iam_policy_document.eks_assume.json
+  tags               = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "cluster" {
+  role       = aws_iam_role.cluster.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+}
+
+data "aws_iam_policy_document" "node_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals { type = "Service"; identifiers = ["ec2.amazonaws.com"] }
+  }
+}
+
+resource "aws_iam_role" "node" {
+  name               = "${var.prefix}-eks-node-role"
+  assume_role_policy = data.aws_iam_policy_document.node_assume.json
+  tags               = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "node" {
+  for_each = toset([
+    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+  ])
+  role       = aws_iam_role.node.name
+  policy_arn = each.value
+}
+
+# EBS CSI role — needs no OIDC, just the managed policy attached after IRSA is wired
+resource "aws_iam_role" "ebs_csi" {
+  name               = "${var.prefix}-ebs-csi-role"
+  assume_role_policy = var.ebs_csi_assume_policy
+  tags               = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi" {
+  role       = aws_iam_role.ebs_csi.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}

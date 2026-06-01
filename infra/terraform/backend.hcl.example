@@ -1,0 +1,8 @@
+# Copy to backend.hcl and fill in your values, then:
+#   terraform init -backend-config=backend.hcl
+
+bucket         = "trading-terraform-state-<account-id>"
+key            = "trading/<env>/terraform.tfstate"
+region         = "ap-south-1"
+dynamodb_table = "trading-terraform-locks"
+encrypt        = true

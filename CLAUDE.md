@@ -98,9 +98,56 @@ make lint    # ruff check + mypy
 make format  # ruff format
 ```
 
+## Terraform Infrastructure (`infra/terraform/`)
+
+**Region**: `ap-south-1` (Mumbai — low latency to NSE)
+
+```
+infra/terraform/
+  bootstrap/          # Run once to create S3 state bucket + DynamoDB lock table
+  versions.tf         # Provider version constraints
+  backend.hcl.example # Copy → backend.hcl, fill account ID, then terraform init -backend-config=backend.hcl
+  modules/
+    vpc/              # 3-AZ VPC, public/private/db subnets, NAT GW (single in dev, per-AZ in prod)
+    eks/              # EKS 1.30, managed system node group, OIDC provider, core add-ons
+    iam_roles/        # Pre-EKS cluster + node IAM roles (no OIDC dependency)
+    iam/              # IRSA roles (API pod, EBS CSI), Secrets Manager secrets, S3 model bucket
+    rds/              # PostgreSQL 16, gp3, parameter group, slow-query logging
+    elasticache/      # Redis 7, TLS + auth token, LRU eviction
+    ecr/              # trading-api + trading-streamlit repos, lifecycle policy
+    karpenter/        # Controller IRSA, SQS interruption queue, EC2NodeClass, NodePool
+  environments/
+    dev/              # t3.micro RDS, cache.t3.micro Redis, single NAT, 2 system nodes
+    prod/             # r6g.large RDS Multi-AZ, r6g.large Redis replica, 3-AZ NAT, 3 system nodes
+```
+
+**Deployment order**:
+```bash
+# 1. Bootstrap (once per AWS account)
+terraform -chdir=infra/terraform/bootstrap apply -var="account_id=<id>"
+
+# 2. Copy and fill secrets
+cp infra/terraform/environments/dev/terraform.tfvars.example infra/terraform/environments/dev/terraform.tfvars
+cp infra/terraform/backend.hcl.example infra/terraform/backend.hcl  # fill bucket/key
+
+# 3. Deploy dev
+cd infra/terraform/environments/dev
+terraform init -backend-config=../../backend.hcl
+terraform apply
+
+# 4. Connect kubectl
+aws eks update-kubeconfig --region ap-south-1 --name trading-dev
+```
+
+**Key design decisions**:
+- `iam_roles` module is separate from `iam` module — cluster/node roles must exist before EKS is created, IRSA roles require the OIDC provider which only exists after EKS is up.
+- DB and Redis credentials written to Secrets Manager (`trading/<env>/db`, `trading/<env>/redis`) by the `iam` module. API pods access them via IRSA (no static credentials in pods).
+- Karpenter node pool targets `spot` + `on-demand` across `c`, `m`, `r` instance families; system workloads (CoreDNS, Karpenter) are tainted `CriticalAddonsOnly` on the managed node group.
+- `single_nat_gateway = true` in dev to reduce costs (~$32/month per NAT GW).
+
 ## Security Model
 
-JWT auth, RBAC, secrets via HashiCorp Vault, AWS IRSA for Kubernetes service accounts.
+JWT auth, RBAC, credentials in AWS Secrets Manager, IRSA for pod-level AWS access (no static keys in pods).
 
 ## Success Targets
 
