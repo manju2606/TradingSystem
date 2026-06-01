@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prediction-engine
+  namespace: trading
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prediction-engine
+  template:
+    metadata:
+      labels:
+        app: prediction-engine
+    spec:
+      containers:
+        - name: prediction
+          image: trading-api:latest
+          command: ["python", "-m", "backend.prediction.worker"]
+          envFrom:
+            - secretRef:
+                name: trading-secrets
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "2Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"

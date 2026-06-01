@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-ui
+  namespace: trading
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading-ui
+  template:
+    metadata:
+      labels:
+        app: trading-ui
+    spec:
+      containers:
+        - name: streamlit
+          image: trading-streamlit:latest
+          ports:
+            - containerPort: 8501
+          env:
+            - name: API_BASE_URL
+              value: "http://trading-api"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trading-ui
+  namespace: trading
+spec:
+  selector:
+    app: trading-ui
+  ports:
+    - port: 80
+      targetPort: 8501

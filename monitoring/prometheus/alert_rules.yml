@@ -1,0 +1,26 @@
+groups:
+  - name: trading_alerts
+    rules:
+      - alert: HighAPILatency
+        expr: http_request_duration_seconds_p99 > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API latency above 500ms SLA"
+
+      - alert: DailyLossLimitApproaching
+        expr: trading_daily_pnl_pct < -0.025
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Daily loss approaching 3% limit"
+
+      - alert: MaxDrawdownApproaching
+        expr: trading_drawdown_pct > 0.08
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Drawdown approaching 10% limit"
