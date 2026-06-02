@@ -1,10 +1,19 @@
-variable "name"         { type = string }
-variable "cluster_name" { type = string }
-variable "vpc_cidr"     { type = string; default = "10.0.0.0/16" }
+variable "name" {
+  type = string
+}
+
+variable "cluster_name" {
+  type = string
+}
+
+variable "vpc_cidr" {
+  type    = string
+  default = "10.0.0.0/16"
+}
 
 variable "single_nat_gateway" {
   type    = bool
-  default = true   # override to false in prod
+  default = true
 }
 
 variable "tags" {

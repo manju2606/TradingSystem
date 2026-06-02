@@ -1,10 +1,10 @@
-# Pre-EKS IAM roles: cluster role and node role only.
-# IRSA roles (which need the OIDC provider) live in the iam module.
-
 data "aws_iam_policy_document" "eks_assume" {
   statement {
     actions = ["sts:AssumeRole"]
-    principals { type = "Service"; identifiers = ["eks.amazonaws.com"] }
+    principals {
+      type        = "Service"
+      identifiers = ["eks.amazonaws.com"]
+    }
   }
 }
 
@@ -22,7 +22,10 @@ resource "aws_iam_role_policy_attachment" "cluster" {
 data "aws_iam_policy_document" "node_assume" {
   statement {
     actions = ["sts:AssumeRole"]
-    principals { type = "Service"; identifiers = ["ec2.amazonaws.com"] }
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
   }
 }
 
@@ -43,7 +46,6 @@ resource "aws_iam_role_policy_attachment" "node" {
   policy_arn = each.value
 }
 
-# EBS CSI role — needs no OIDC, just the managed policy attached after IRSA is wired
 resource "aws_iam_role" "ebs_csi" {
   name               = "${var.prefix}-ebs-csi-role"
   assume_role_policy = var.ebs_csi_assume_policy

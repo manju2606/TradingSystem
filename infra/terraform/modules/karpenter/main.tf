@@ -128,9 +128,18 @@ resource "helm_release" "karpenter" {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = aws_iam_role.karpenter.arn
   }
-  set { name = "settings.clusterName";     value = var.cluster_name }
-  set { name = "settings.clusterEndpoint"; value = var.cluster_endpoint }
-  set { name = "settings.interruptionQueue"; value = aws_sqs_queue.interruption.name }
+  set {
+    name  = "settings.clusterName"
+    value = var.cluster_name
+  }
+  set {
+    name  = "settings.clusterEndpoint"
+    value = var.cluster_endpoint
+  }
+  set {
+    name  = "settings.interruptionQueue"
+    value = aws_sqs_queue.interruption.name
+  }
 }
 
 # ── EC2NodeClass ──────────────────────────────────────────────────────────────
@@ -174,16 +183,23 @@ resource "kubernetes_manifest" "node_pool" {
       template = {
         metadata = { labels = { role = "workload" } }
         spec = {
-          nodeClassRef  = { group = "karpenter.k8s.aws"; kind = "EC2NodeClass"; name = "default" }
+          nodeClassRef = {
+            group = "karpenter.k8s.aws"
+            kind  = "EC2NodeClass"
+            name  = "default"
+          }
           requirements = [
-            { key = "karpenter.sh/capacity-type"; operator = "In"; values = ["spot", "on-demand"] },
-            { key = "kubernetes.io/arch";          operator = "In"; values = ["amd64"] },
-            { key = "karpenter.k8s.aws/instance-category"; operator = "In"; values = ["c", "m", "r"] },
-            { key = "karpenter.k8s.aws/instance-generation"; operator = "Gt"; values = ["2"] },
+            { key = "karpenter.sh/capacity-type",             operator = "In", values = ["spot", "on-demand"] },
+            { key = "kubernetes.io/arch",                     operator = "In", values = ["amd64"] },
+            { key = "karpenter.k8s.aws/instance-category",   operator = "In", values = ["c", "m", "r"] },
+            { key = "karpenter.k8s.aws/instance-generation", operator = "Gt", values = ["2"] },
           ]
         }
       }
-      limits = { cpu = var.max_cpu; memory = var.max_memory }
+      limits = {
+        cpu    = var.max_cpu
+        memory = var.max_memory
+      }
       disruption = {
         consolidationPolicy = "WhenEmptyOrUnderutilized"
         consolidateAfter    = "1m"
