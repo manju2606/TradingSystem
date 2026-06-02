@@ -71,32 +71,51 @@ Each node is a separate file. `cost_reviewer.py` is a standalone Claude Haiku ag
 
 Tables: `users`, `symbols`, `candles`, `signals`, `predictions`, `orders`, `positions`, `backtests`, `agent_logs`
 
-## Commands
+## Local Development (Docker Desktop)
+
+Primary deployment is Docker Desktop — no AWS required to develop or run the full stack.
 
 ```bash
-# Start all services (postgres, redis, api, streamlit, prometheus, grafana)
-make up                          # docker-compose up -d
-make down
+# First-time setup
+make setup           # copies .env.example → .env, builds images, starts stack
 
-# API dev server (hot-reload)
-make api-dev                     # uvicorn backend.api.main:app --reload --port 8000
+# Day-to-day
+make up              # start all services
+make down            # stop all services
+make logs            # tail all logs
+make ps              # show running containers
 
-# Streamlit UI
-make ui-dev                      # streamlit run frontend/streamlit/app.py
-
-# Database migrations
-make migrate                     # alembic upgrade head (run from db/postgres/)
+# Database migrations (runs inside the api container)
+make migrate                     # alembic upgrade head
 make migrate-create msg="desc"   # generate new migration
 
-# Tests
-make test                        # all tests
-make test-unit                   # tests/unit/ only
-pytest tests/unit/test_risk_engine.py -v   # single test file
+# Shell access
+make shell-api       # bash into api container
+make shell-db        # psql into postgres
+
+# Tests (run locally against pip-installed deps)
+make test-unit                              # fast, no DB/network
+pytest tests/unit/test_risk_engine.py -v   # single file
 
 # Lint / format
-make lint    # ruff check + mypy
-make format  # ruff format
+make lint
+make format
 ```
+
+**Service URLs after `make up`:**
+
+| Service | URL |
+|---|---|
+| FastAPI | http://localhost:8000/docs |
+| Streamlit | http://localhost:8501 |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 (admin/admin) |
+| PostgreSQL | localhost:5432 |
+| Redis | localhost:6379 |
+
+**Migrations run automatically** on `make up` via the `migrate` init container — no manual step needed on first start.
+
+**Hot reload** is active for both `api` and `streamlit` via volume mounts (`./backend` and `./frontend` are mounted into the containers).
 
 ## Terraform Infrastructure (`infra/terraform/`)
 
