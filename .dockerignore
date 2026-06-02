@@ -1,0 +1,59 @@
+# Terraform provider binaries and state
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.backup
+**/*.tfvars
+!**/*.tfvars.example
+infra/terraform/backend.hcl
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# ML models
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+models/saved/
+
+# Data
+data/raw/
+data/processed/
+*.csv
+*.parquet
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+.docker/
+
+# Logs
+*.log
+logs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Tests (not needed in image)
+tests/
+
+# Env files
+.env
+.env.local
