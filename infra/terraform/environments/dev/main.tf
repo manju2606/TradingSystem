@@ -90,9 +90,9 @@ module "eks" {
   ebs_csi_role_arn   = module.iam_roles.ebs_csi_role_arn
 
   system_node_instance_types = ["t3.medium"]
-  system_node_desired        = 2
-  system_node_min            = 2
-  system_node_max            = 3
+  system_node_desired        = 1
+  system_node_min            = 1
+  system_node_max            = 2
 }
 
 # Separate pre-EKS IAM roles module (no IRSA — those depend on OIDC which needs the cluster)
