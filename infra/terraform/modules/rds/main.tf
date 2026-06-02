@@ -66,8 +66,28 @@ resource "aws_db_instance" "this" {
   backup_window           = "02:00-03:00"
   maintenance_window      = "Mon:03:00-Mon:04:00"
 
-  performance_insights_enabled = var.multi_az   # enable in prod
-  monitoring_interval          = var.multi_az ? 60 : 0
+  performance_insights_enabled = var.create_read_replica
+  monitoring_interval          = var.create_read_replica ? 60 : 0
 
   tags = var.tags
+}
+
+resource "aws_db_instance" "replica" {
+  count = var.create_read_replica ? 1 : 0
+
+  identifier          = "${var.identifier}-replica"
+  replicate_source_db = aws_db_instance.this.identifier
+
+  instance_class    = var.read_replica_instance_class != "" ? var.read_replica_instance_class : var.instance_class
+  storage_type      = "gp3"
+  storage_encrypted = true
+
+  publicly_accessible = false
+  skip_final_snapshot = true
+  deletion_protection = false
+
+  performance_insights_enabled = true
+  monitoring_interval          = 60
+
+  tags = merge(var.tags, { Role = "read-replica" })
 }

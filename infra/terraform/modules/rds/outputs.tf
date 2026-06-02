@@ -1,5 +1,6 @@
-output "endpoint"           { value = aws_db_instance.this.endpoint }
-output "address"            { value = aws_db_instance.this.address }
-output "port"               { value = aws_db_instance.this.port }
-output "db_name"            { value = aws_db_instance.this.db_name }
-output "security_group_id"  { value = aws_security_group.rds.id }
+output "endpoint"             { value = aws_db_instance.this.endpoint }
+output "address"              { value = aws_db_instance.this.address }
+output "port"                 { value = aws_db_instance.this.port }
+output "db_name"              { value = aws_db_instance.this.db_name }
+output "security_group_id"    { value = aws_security_group.rds.id }
+output "read_replica_address" { value = length(aws_db_instance.replica) > 0 ? aws_db_instance.replica[0].address : "" }

@@ -64,6 +64,16 @@ variable "backup_retention_days" {
   default = 7
 }
 
+variable "create_read_replica" {
+  type    = bool
+  default = false
+}
+
+variable "read_replica_instance_class" {
+  type    = string
+  default = ""
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

@@ -106,7 +106,10 @@ module "rds" {
   max_allocated_storage = 500
   password              = var.db_password
 
-  multi_az              = true
+  multi_az                    = false
+  create_read_replica         = true
+  read_replica_instance_class = "db.r6g.medium"
+
   deletion_protection   = true
   skip_final_snapshot   = false
   backup_retention_days = 7
@@ -119,7 +122,7 @@ module "elasticache" {
   cache_subnet_group_name   = module.vpc.cache_subnet_group_name
   allowed_security_group_ids = [module.eks.node_security_group_id]
 
-  node_type               = "cache.r6g.large"
+  node_type               = "cache.r6g.medium"
   num_cache_nodes         = 2   # primary + replica
   multi_az                = true
   auth_token              = var.redis_auth_token
